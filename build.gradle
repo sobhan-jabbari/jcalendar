@@ -1,0 +1,58 @@
+apply plugin: 'com.android.library'
+
+
+ext {
+    appVersionCode = 124
+    appVersionName = '1.2.4'
+    appGroupId = 'ir.afraapps'
+    appArtifactId = 'jcalendar'
+}
+
+android {
+    // compileSdkVersion 30
+
+    defaultConfig {
+        minSdkVersion 16
+        // targetSdkVersion 30
+        versionCode appVersionCode
+        versionName appVersionName
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    lintOptions {
+        abortOnError false
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+
+    libraryVariants.all { variant ->
+        variant.outputs.all { output ->
+            if (outputFile != null && variant.buildType.name == "release" && outputFileName.endsWith('.aar')) {
+                // outputFileName = "${project.name}-${variant.name}-${version}.aar"
+                println outputFileName
+            }
+        }
+    }
+
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+
+    implementation 'androidx.appcompat:appcompat:1.4.0'
+}
+
+// apply from: 'publish.gradle'
+
+// ./gradlew :bcalendar:clean :bcalendar:build :bcalendar:bintrayUpload
+

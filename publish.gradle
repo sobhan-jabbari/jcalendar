@@ -1,0 +1,139 @@
+apply plugin: 'maven-publish'
+apply plugin: 'signing'
+
+nexusPublishing {
+    repositories {
+        sonatype {
+            stagingProfileId = '0374CF2E8DD1BDFD'
+            nexusUrl.set(uri("https://s01.oss.sonatype.org/service/local/"))
+            snapshotRepositoryUrl.set(uri("https://s01.oss.sonatype.org/content/repositories/snapshots/"))
+            username = ossrhUsername
+            password = ossrhPassword
+            version = appVersionName
+        }
+    }
+}
+
+gradle.projectsEvaluated {
+
+    task aggregatedJavadoc(type: Javadoc, description: 'Generate javadocs from "common" and "txsdk" modules',
+            group: JavaBasePlugin.DOCUMENTATION_GROUP) {
+        options.encoding 'utf-8'
+        options {
+            addStringOption 'docencoding', 'utf-8'
+            addStringOption 'charset', 'utf-8'
+            addStringOption 'overview', 'doc/readme.html'
+            links 'https://docs.oracle.com/javase/7/docs/api/'
+            links 'https://d.android.com/reference'
+            links 'https://developer.android.com/reference/androidx/'
+        }
+        title = "Jalali Calendar "
+
+        destinationDir project.file("$project.buildDir/docs/javadoc")
+
+        Set<Project> projectSet = subprojects.findAll { subproject ->
+            subproject.name == 'txsdk' || subproject.name == 'common'
+        }
+
+        // Merge the properties of the androidJavadoc tasks of the subprojects
+        source = projectSet.androidJavadoc.source
+        classpath = project.files(projectSet.androidJavadoc.classpath)
+        excludes = projectSet.androidJavadoc.excludes.flatten().unique()
+        includes = projectSet.androidJavadoc.includes.flatten().unique()
+    }
+}
+
+task androidJavadoc(type: Javadoc) {
+    if (plugins.hasPlugin('android-library')) {
+        source = android.sourceSets.main.java.srcDirs
+        classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+        android.libraryVariants.all { variant ->
+            if (variant.name == 'release') {
+                owner.classpath += variant.javaCompileProvider.get().classpath
+            }
+        }
+    } else {
+        source = sourceSets.main.allJava
+        classpath += configurations.runtimeClasspath
+        classpath += configurations.compileClasspath
+    }
+    exclude '**/R.html', '**/R.*.html', '**/index.html', '**/*.kt'
+    options.encoding 'utf-8'
+    options {
+        addStringOption 'docencoding', 'utf-8'
+        addStringOption 'charset', 'utf-8'
+        links 'https://docs.oracle.com/javase/7/docs/api/'
+        links 'https://d.android.com/reference'
+        links 'https://developer.android.com/reference/androidx/'
+    }
+}
+
+task androidJavadocJar(type: Jar, dependsOn: androidJavadoc) {
+    archiveClassifier.set('javadoc')
+    from androidJavadoc.destinationDir
+    preserveFileTimestamps = false
+    reproducibleFileOrder = true
+}
+
+task javaSourcesJar(type: Jar) {
+    archiveClassifier.set('sources')
+    if (plugins.hasPlugin('android-library')) {
+        from android.sourceSets.main.java.srcDirs
+    } else {
+        from sourceSets.main.allSource
+    }
+    preserveFileTimestamps = false
+    reproducibleFileOrder = true
+}
+
+afterEvaluate {
+    publishing {
+        publications {
+            // Creates a Maven publication called 'library'.
+            release(MavenPublication) {
+                if (plugins.hasPlugin('android-library')) {
+                    from components.release
+                } else if (plugins.hasPlugin('java')) {
+                    from components.java
+                    jar.preserveFileTimestamps = false
+                    jar.reproducibleFileOrder = true
+                }
+
+                artifact androidJavadocJar
+                artifact javaSourcesJar
+
+                groupId project.ext.appGroupId
+                artifactId project.ext.appArtifactId
+                version project.ext.appVersionName
+                pom {
+                    name = artifactId
+                    description = 'Jalali calendar for android'
+                    url = 'https://github.com/sobhan-jabbari/bottombar/'
+                    licenses {
+                        license {
+                            name = 'The Apache License, Version 2.0'
+                            url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                        }
+                    }
+                    scm {
+                        connection = 'scm:git:https://github.com/sobhan-jabbari/bottombar.git'
+                        url = 'https://github.com/sobhan-jabbari/bottombar/'
+                    }
+                    developers {
+                        developer {
+                            id = 'sobhan-jabbari'
+                            name = 'Ali Jabbari'
+                            email = 'sobhan.jabbari@gmail.com'
+                        }
+                    }
+                }
+            }
+        }
+        // No repositories are configured here, since"gradle-nexus.publish-plugin" will create its
+        // own using the configuration in the project's gradle file
+    }
+}
+
+signing {
+    sign publishing.publications
+}
