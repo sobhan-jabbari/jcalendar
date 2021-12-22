@@ -7,11 +7,10 @@ group = 'ir.afraapps'
 version = rootProject.appVersionName
 
 android {
-    compileSdkVersion 30
+    compileSdk 31
     defaultConfig {
         minSdkVersion 17
         targetSdkVersion 30
-        vectorDrawables.useSupportLibrary = true
         versionCode appVersionCode
         versionName appVersionName
     }
@@ -19,14 +18,12 @@ android {
     buildTypes {
         release {
             minifyEnabled false
-            useProguard true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
             debuggable false
         }
 
         debug {
             minifyEnabled false
-            useProguard true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
             debuggable false
         }
@@ -88,7 +85,7 @@ afterEvaluate {
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
-    implementation 'androidx.appcompat:appcompat:1.3.0'
+    implementation 'androidx.appcompat:appcompat:1.4.0'
 }
 
 

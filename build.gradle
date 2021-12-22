@@ -9,7 +9,7 @@ buildscript {
         maven { url 'https://jitpack.io' }
     }
     dependencies {
-        classpath "com.android.tools.build:gradle:4.2.1"
+        classpath 'com.android.tools.build:gradle:7.0.4'
     }
 }
 
@@ -17,14 +17,14 @@ allprojects {
     repositories {
         google()
         mavenCentral()
-        jcenter() // Warning: this repository is going to shut down soon
         maven { url 'https://jitpack.io' }
+        jcenter() // Warning: this repository is going to shut down soon
     }
 }
 
 ext {
-    appVersionCode = 1203
-    appVersionName = '1.2.3'
+    appVersionCode = 1206
+    appVersionName = '1.2.6'
 }
 
 
